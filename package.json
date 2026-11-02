@@ -5,6 +5,8 @@
   "description": "Every S3eidat Tools tool in one private, offline app.",
   "author": "S3eidat",
   "license": "MIT",
+  "homepage": "https://s3eidat.github.io",
+  "repository": { "type": "git", "url": "https://github.com/s3eidat/s3eidat-tools-app.git" },
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -30,7 +32,7 @@
     "nsis": {
       "oneClick": true,
       "perMachine": false,
-      "artifactName": "S3eidat-Tools-Setup-${version}.exe",
+      "artifactName": "S3eidat-Tools-Windows-Setup.exe",
       "shortcutName": "S3eidat Tools"
     }
   }

@@ -11,6 +11,7 @@ const HUB_HTML = `<!doctype html><html lang="en"><head>
 <meta name="google-site-verification" content="x">
 <link rel="stylesheet" href="/hub.css">
 </head><body><main>
+  <section class="hub-app" aria-labelledby="app-h"><h2 id="app-h">Get the app</h2><a href="https://github.com/x">Download</a></section>
   <section id="recent" class="hub-recent" hidden><h2>Your tools</h2></section>
   <section class="hub-ad" aria-labelledby="ad-h"><video src="/media/ad.mp4"></video></section>
 </main>
@@ -79,7 +80,7 @@ test("builds the site layout with shared copies, on-demand files and the app hom
   assert.match(pdf.src, /^\/(json-studio|pdf-merge)\/lib\/pdf\.min\.mjs$/);
 
   const home = fs.readFileSync(path.join(out, "index.html"), "utf8");
-  assert.ok(home.includes('src="/_app/home.js"') && home.includes('id="favs-row"') && !home.includes("hub-ad") && !home.includes("google-site"));
+  assert.ok(home.includes('src="/_app/home.js"') && home.includes('id="favs-row"') && !home.includes("hub-ad") && !home.includes("google-site") && !home.includes("Get the app"));
   assert.ok(fs.readFileSync(path.join(out, "ar", "index.html"), "utf8").includes("المفضلة"));
   assert.ok(has("/_app/home.js") && has("/_app/home.css"));
 });
