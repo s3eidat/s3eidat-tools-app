@@ -21,8 +21,10 @@ S3eidat-Tools/repos/*   (source of truth, untouched)
         ▼
 www/                    the site as deployed: hub repo at /, each tool repo at /<slug>/
   index.html, ar/       replaced by the app home (shell/), which adds favourites
-  _shared/kit/          one copy of the kit; /<slug>/kit/* resolves here
-  _remote.json          on-demand files: path → {sha256, size}
+  _shared/<hash>/       one copy of every duplicated file (the kit, pdf.js, …)
+  _app/aliases.json     original path → shared copy
+  _app/remote.json      on-demand files: path → {sha256, size, src}
+  _app/home.js, .css    the app home
         │
         ├── electron/main.js   serves www/ on app://tools/ (desktop)
         └── capacitor (later)  serves www/ on its local origin (phones)
@@ -34,8 +36,8 @@ shared (recent tools, favourites, settings), as on `s3eidat.github.io`.
 
 **Protocol handler (`electron/serve.js`), in order:**
 1. Map the URL path to a file in `www/`; a directory gets `index.html`; `..` is rejected.
-2. `/<slug>/kit/<file>` → `/_shared/kit/<file>` (the build only does this when the copy is byte-identical).
-3. Path listed in `_remote.json`: serve from the cache in the user's app-data folder; if missing, download from
+2. A path listed in `aliases.json` → its shared copy (the build only shares byte-identical files).
+3. Path listed in `remote.json`: serve from the cache in the user's app-data folder; if missing, download from
    `https://s3eidat.github.io/<path>`, verify size + SHA-256, store, serve. Wrong hash → 502, nothing stored.
 4. Anything else → 404 (the page's own 404 handling stays).
 

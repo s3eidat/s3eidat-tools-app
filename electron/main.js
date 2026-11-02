@@ -3,7 +3,8 @@
    - Pages can't reach the network: their own CSP blocks it, and this process cancels any http(s)/ws request too.
    - Only this process downloads, only on-demand files listed in remote.json, only from the official site, verified.
    - Links to other sites open in the default browser.
-   S3_SMOKE=slug,slug runs each tool's self-test with all network blocked, saves screenshots and exits. */
+   S3_SMOKE=slug,slug runs each tool's self-test with all network blocked, saves screenshots and exits
+   (S3_SMOKE_ONLINE=1 lets the app process fetch on-demand files; pages stay blocked). */
 const { app, BrowserWindow, desktopCapturer, protocol, session, shell } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -18,6 +19,7 @@ const ALLOWED = new Set(["media", "geolocation", "notifications", "fullscreen", 
 const NET = ["http://*/*", "https://*/*", "ws://*/*", "wss://*/*"];
 
 if (SMOKE) { // the smoke window is invisible; keep Chromium from treating it as covered up and pausing it
+  app.setPath("userData", fs.mkdtempSync(path.join(app.getPath("temp"), "s3-smoke-profile-"))); // never the user's favourites
   app.commandLine.appendSwitch("disable-features", "CalculateNativeWinOcclusion");
   app.commandLine.appendSwitch("disable-renderer-backgrounding");
   app.commandLine.appendSwitch("disable-background-timer-throttling");
@@ -40,6 +42,7 @@ function body(buf, file, status = 200) {
 async function serve(request, download) {
   const u = new URL(request.url);
   const r = u.host === "tools" ? resolvePath(u.pathname, site) : { kind: "notfound" };
+  if (process.env.S3_TRACE) console.error("trace:", r.kind, request.url);
   if (r.kind === "redirect") return new Response(null, { status: 301, headers: { Location: r.location + u.search } });
   if (r.kind === "file") return body(await fs.promises.readFile(r.file), r.file);
   if (r.kind === "remote") {
@@ -108,7 +111,7 @@ const PROBE = `(async () => {
   const out = { title: document.title, cards: document.querySelectorAll(".hub-card").length };
   try {
     const t = typeof window.S3_SELFTEST === "function"
-      ? await Promise.race([window.S3_SELFTEST(), new Promise((r) => setTimeout(() => r("timeout"), 30000))]) : "none";
+      ? await Promise.race([window.S3_SELFTEST(), new Promise((r) => setTimeout(() => r("timeout"), ${Number(process.env.S3_SMOKE_TIMEOUT) || 30000}))]) : "none";
     out.selftest = String(t);
   } catch (e) { out.selftest = "error: " + e.message; }
   return out;
@@ -163,7 +166,9 @@ app.whenReady().then(() => {
   lockDown(ses);
   // Downloads of on-demand files use their own session, so the pages' network block never applies to them.
   const dl = session.fromPartition("s3-downloads");
-  const download = SMOKE ? () => Promise.reject(new Error("network blocked in smoke mode")) : (url) => dl.fetch(url);
+  // Smoke runs are fully offline unless S3_SMOKE_ONLINE=1 (to test on-demand downloads; pages stay blocked either way).
+  const offline = SMOKE && !process.env.S3_SMOKE_ONLINE;
+  const download = offline ? () => Promise.reject(new Error("network blocked in smoke mode")) : (url) => dl.fetch(url);
   ses.protocol.handle("app", (req) => serve(req, download));
   const win = createWindow();
   if (SMOKE) return smoke(win, SMOKE.split(",").filter(Boolean));
