@@ -1,0 +1,12 @@
+/* App home additions on top of the site's hub.css: a favourite star on each card. */
+.app-cell { position: relative; display: grid; }
+.app-cell > .hub-card { height: 100%; padding-inline-end: 44px; }
+.app-star {
+  position: absolute; top: 8px; inset-inline-end: 8px; width: 32px; height: 32px; border-radius: 999px;
+  display: grid; place-items: center; font-size: 17px; line-height: 1; color: var(--text-3);
+  background: transparent; border: 1px solid transparent; cursor: pointer;
+  transition: color var(--dur), border-color var(--dur), background var(--dur);
+}
+.app-star:hover { color: var(--text); border-color: var(--line); background: var(--surface-2, var(--surface)); }
+.app-star[aria-pressed="true"] { color: var(--accent); }
+.app-star:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
